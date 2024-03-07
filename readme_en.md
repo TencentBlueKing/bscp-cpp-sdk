@@ -44,7 +44,7 @@ Replace `home/path/to/grpc/` with your installation path, it is recommended `/us
 
 ### Third-party dependency library installation
 
-Enter the `third-party/scripts` directory and run `sh ./install_rapidjson.sh` to install the corresponding dependent libraries.
+Enter the `third-party` directory and run `sh ./install.sh` to install the corresponding dependent libraries.
 
 ### Compile with `bscp-cpp`
 

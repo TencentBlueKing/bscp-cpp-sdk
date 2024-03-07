@@ -8,6 +8,7 @@ INCLUDEF  = -I./
 INCLUDEF += -I${BUILD_DIR}/
 INCLUDEF += -I${BSCP_CPP_SDK_PATH}/
 INCLUDEF += -I${BSCP_CPP_SDK_PATH}/internal
+INCLUDEF += -I${BSCP_CPP_SDK_PATH}/third-party
 INCLUDEF += -I${GRPC_PATH}/include
 
 # compile
