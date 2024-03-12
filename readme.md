@@ -44,7 +44,7 @@ popd
 
 ### 第三方依赖库安装
 
-进入到`third-party/scripts`目录中，运行`sh ./install_rapidjson.sh`以安装相应的依赖库。
+进入到`third-party`目录中，运行`sh ./install.sh`以安装相应的依赖库。
 
 ### `bscp-cpp`编译
 
