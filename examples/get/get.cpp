@@ -15,7 +15,7 @@
 #include <iostream>
 #include <string>
 
-#include "../../client.h"
+#include "client.h"
 
 int LogHandle(const bscp::log::LogLevel& level, const std::string& msg)
 {

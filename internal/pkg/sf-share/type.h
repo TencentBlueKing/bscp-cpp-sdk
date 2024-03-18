@@ -16,15 +16,14 @@
 #include <map>
 #include <string>
 
-#include "../../error_code.h"
-#include "../../tools/rapidjson_macro.h"
-
-#include "pkg/protocol/core/base/base.pb.h"
-#include "pkg/protocol/core/config-item/config_item.pb.h"
-#include "pkg/protocol/core/content/content.pb.h"
-#include "pkg/protocol/core/hook/hook.pb.h"
-#include "pkg/protocol/core/kv/kvs.pb.h"
-#include "pkg/protocol/feed-server/feed_server.pb.h"
+#include "internal/error_code.h"
+#include "internal/pkg/protocol/core/base/base.pb.h"
+#include "internal/pkg/protocol/core/config-item/config_item.pb.h"
+#include "internal/pkg/protocol/core/content/content.pb.h"
+#include "internal/pkg/protocol/core/hook/hook.pb.h"
+#include "internal/pkg/protocol/core/kv/kvs.pb.h"
+#include "internal/pkg/protocol/feed-server/feed_server.pb.h"
+#include "internal/tools/rapidjson_macro.h"
 
 namespace bscp {
 namespace sfs {

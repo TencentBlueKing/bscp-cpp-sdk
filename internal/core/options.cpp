@@ -12,9 +12,9 @@
 
 #include "options.h"
 
-#include "../error_code.h"
-#include "../pkg/type.h"
-#include "../tools/finger_print.h"
+#include "internal/error_code.h"
+#include "internal/pkg/type.h"
+#include "internal/tools/finger_print.h"
 
 namespace bscp {
 

@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 
-#include "../error_code.h"
+#include "internal/error_code.h"
 
 namespace bscp {
 

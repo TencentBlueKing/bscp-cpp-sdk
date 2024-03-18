@@ -10,7 +10,8 @@
  * limitations under the License.
  */
 
-#include "../client.h"
+#include "client.h"
+
 #include "common.h"
 #include <map>
 #include <string>
@@ -38,7 +39,7 @@ int TestInitialClient()
     options.m_sideRid = g_argMap["-side_rid"];
 
     bscp::Client client(options, LogHandle);
-    auto ret = client.InitialClient();
+    auto ret = client.Initialize();
     if (ret)
     {
         return 2;
@@ -66,20 +67,20 @@ int TestContinueWatch()
 
     bscp::Client client(options, LogHandle);
 
-    // initial client.
-    auto ret = client.InitialClient();
+    // initialize client.
+    auto ret = client.Initialize();
     if (ret)
     {
-        std::cout << "failed to initial client" << std::endl;
+        std::cout << "failed to initialize client" << std::endl;
         return 2;
     }
-    std::cout << "initial client success" << std::endl;
+    std::cout << "initialize client success" << std::endl;
 
     bscp::AppOptions appOptions;
     std::string app = g_argMap["-app"];
 
     // add watch.
-    ret = client.AddWatcher(handle, app, appOptions);
+    ret = client.AddWatcher(app, handle, appOptions);
     if (ret)
     {
         std::cout << "failed to add watcher" << std::endl;
@@ -137,20 +138,20 @@ int TestContinueStartStopWatch()
 
     bscp::Client client(options, LogHandle);
 
-    // initial client.
-    auto ret = client.InitialClient();
+    // initialize client.
+    auto ret = client.Initialize();
     if (ret)
     {
-        std::cout << "failed to initial client" << std::endl;
+        std::cout << "failed to initialize client" << std::endl;
         return 2;
     }
-    std::cout << "initial client success" << std::endl;
+    std::cout << "initialize client success" << std::endl;
 
     bscp::AppOptions appOptions;
     std::string app = g_argMap["-app"];
 
     // add watch.
-    ret = client.AddWatcher(handle, app, appOptions);
+    ret = client.AddWatcher(app, handle, appOptions);
     if (ret)
     {
         std::cout << "failed to add watcher" << std::endl;

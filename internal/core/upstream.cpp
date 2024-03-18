@@ -11,7 +11,8 @@
  */
 
 #include "upstream.h"
-#include "../error_code.h"
+
+#include "internal/error_code.h"
 
 namespace bscp {
 

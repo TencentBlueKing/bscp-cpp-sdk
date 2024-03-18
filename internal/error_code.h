@@ -29,6 +29,7 @@
 #define BSCP_CPP_SDK_LOG_ERROR             (11)
 #define BSCP_CPP_SDK_LOG_HANDLE_ERROR      (12)
 #define BSCP_CPP_SDK_START_WATCH_ERROR     (13)
+#define BSCP_CPP_SDK_LOAD_BALANCE_ERROR    (14)
 
 // clang-format on
 

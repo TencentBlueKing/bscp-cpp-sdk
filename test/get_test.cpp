@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-#include "../client.h"
+#include "client.h"
 
 #include "common.h"
 

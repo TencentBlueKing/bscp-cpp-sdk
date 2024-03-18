@@ -11,8 +11,9 @@
  */
 
 #include "watch.h"
-#include "../../third-party/base64/base64.h"
-#include "../error_code.h"
+
+#include "internal/error_code.h"
+#include "third-party/base64/base64.h"
 
 #define KEEP_ALIVE_INTERVALS_SEC 1
 #define HEART_BEAT_INTERVALS_SEC 15
@@ -53,7 +54,7 @@ int Watcher::StartWatch()
     // check the watch thread is associate with an active execution.
     if (m_watchThread.joinable() || m_keepAliveThread.joinable())
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to start watch multiple times without call stop watch.");
+        LOG_ERROR(m_loadBalance->Get(), "failed to start watch multiple times without call stop watch.");
         return BSCP_CPP_SDK_START_WATCH_ERROR;
     }
 
@@ -79,7 +80,7 @@ int Watcher::StartWatch()
     auto ret = payload.Marshal(m_payload);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to marshal payload. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to marshal payload. err-code(%d)", ret);
         return ret;
     }
 
@@ -99,14 +100,14 @@ int Watcher::StartWatch()
     ret = SetContext(m_clientContext, m_options);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to set grpc client context. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to set grpc client context. err-code(%d)", ret);
         return ret;
     }
 
     ret = m_upstream->Watch(m_clientContext, req, m_reader);
     if (ret || GRPC_CHANNEL_READY != m_channel->GetState(true))
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to call grpc watch. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to call grpc watch. err-code(%d)", ret);
         return ret;
     }
 
@@ -128,7 +129,7 @@ int Watcher::StopWatch()
 
     if (nullptr == m_reader)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "m_reader stream is nullptr.");
+        LOG_ERROR(m_loadBalance->Get(), "m_reader stream is nullptr.");
         return BSCP_CPP_SDK_OK;
     }
 
@@ -161,7 +162,7 @@ void Watcher::WatchFunc()
             // prase the reader message.
             if (!IsApiVersionMatch(feedWatchMessage.api_version()))
             {
-                LOG_WARN(m_options.m_feedAddrs[0], "api version is not matched.");
+                LOG_WARN(m_loadBalance->Get(), "api version is not matched.");
                 // do nothing.
                 break;
             }
@@ -175,7 +176,7 @@ void Watcher::WatchFunc()
             case FEED_MESSAGE_TYPE_BOUNCE:
             {
                 // send reconnect signal.
-                LOG_INFO(m_options.m_feedAddrs[0], "receive a bounce signal from feed server.");
+                LOG_INFO(m_loadBalance->Get(), "receive a bounce signal from feed server.");
                 m_reconnectSignal = true;
                 m_channelAliveFlag = false;
             }
@@ -183,7 +184,7 @@ void Watcher::WatchFunc()
 
             case FEED_MESSAGE_TYPE_PUBLISH_RELEASE:
             {
-                LOG_INFO(m_options.m_feedAddrs[0], "receive a release change signal from feed server.");
+                LOG_INFO(m_loadBalance->Get(), "receive a release change signal from feed server.");
                 sfs::ReleaseChangeEvent releaseChangeEvent;
                 releaseChangeEvent.m_payload = feedWatchMessage.payload();
                 releaseChangeEvent.m_rid = feedWatchMessage.rid();
@@ -196,14 +197,14 @@ void Watcher::WatchFunc()
                 auto ret = OnReleaseChange(releaseChangeEvent);
                 if (ret)
                 {
-                    LOG_ERROR(m_options.m_feedAddrs[0], "failed to call on release change. err-code(%d)", ret);
+                    LOG_ERROR(m_loadBalance->Get(), "failed to call on release change. err-code(%d)", ret);
                 }
             }
             break;
 
             default:
             {
-                LOG_ERROR(m_options.m_feedAddrs[0], "receive an unknown signal");
+                LOG_ERROR(m_loadBalance->Get(), "receive an unknown signal");
             }
             break;
             }
@@ -246,7 +247,7 @@ int Watcher::OnReleaseChange(const sfs::ReleaseChangeEvent& event)
     auto ret = payload.Unmarshal(event.m_payload);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "fail to unmarshal payload. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "fail to unmarshal payload. err-code(%d)", ret);
         return ret;
     }
 
@@ -259,7 +260,7 @@ int Watcher::OnReleaseChange(const sfs::ReleaseChangeEvent& event)
             continue;
         }
 
-        LOG_INFO(m_options.m_feedAddrs[0], "subscriber matched.");
+        LOG_INFO(m_loadBalance->Get(), "subscriber matched");
 
         // run callback function.
         subscriber->m_currentReleaseID = payload.m_releaseMeta.m_releaseID;
@@ -291,11 +292,11 @@ int Watcher::OnReleaseChange(const sfs::ReleaseChangeEvent& event)
         auto ret = subscriber->m_callback(release);
         if (ret)
         {
-            LOG_WARN(m_options.m_feedAddrs[0], "failed to call user watch callback function. err-code(%d)", ret);
+            LOG_WARN(m_loadBalance->Get(), "failed to call user watch callback function. err-code(%d)", ret);
             return BSCP_CPP_SDK_CALLBACK_ERROR;
         }
 
-        LOG_INFO(m_options.m_feedAddrs[0], "success to call user callback function.");
+        LOG_INFO(m_loadBalance->Get(), "success to call user callback function");
     }
 
     return BSCP_CPP_SDK_OK;
@@ -319,16 +320,17 @@ int Watcher::Reconnect()
     auto ret = SetContext(m_clientContext, m_options);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to set grpc client context. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to set grpc client context. err-code(%d)", ret);
         return BSCP_CPP_SDK_RECONNECT_ERROR;
     }
 
     ret = m_upstream->Watch(m_clientContext, req, m_reader);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to call grpc watch. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to call grpc watch. err-code(%d)", ret);
         return BSCP_CPP_SDK_RECONNECT_ERROR;
     }
+
     return BSCP_CPP_SDK_OK;
 }
 
@@ -356,7 +358,7 @@ int Watcher::Heartbeat()
     auto ret = SetContext(context, m_options);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to set grpc client context. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to set grpc client context. err-code(%d)", ret);
         return ret;
     }
 
@@ -365,7 +367,7 @@ int Watcher::Heartbeat()
     ret = m_upstream->Messaging(context, req, resp);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to call grpc messaging. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to call grpc messaging. err-code(%d)", ret);
         return ret;
     }
 
@@ -374,15 +376,12 @@ int Watcher::Heartbeat()
 
 void Watcher::KeepAliveFunc()
 {
-    int count = 0;
-
     // NOTE: when the grpc channel is disconnect, record the retry count.
     uint64_t retryCount = 0;
 
     while (m_keepAliveFlag)
     {
         std::this_thread::sleep_for(std::chrono::seconds(KEEP_ALIVE_INTERVALS_SEC));
-        ++count;
 
         // proactive test and reconnect signal.
         if (GRPC_CHANNEL_READY != m_channel->GetState(true) || m_reconnectSignal)
@@ -420,11 +419,18 @@ void Watcher::KeepAliveFunc()
             continue;
         }
 
+        auto durationMS = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                    std::chrono::steady_clock::now().time_since_epoch())
+                                                    .count()) -
+                          m_lastHeartbeatTimeMS;
+
         // check heart beat signal to reconnect
-        if (count * KEEP_ALIVE_INTERVALS_SEC >= HEART_BEAT_INTERVALS_SEC)
+        if (durationMS >= HEART_BEAT_INTERVALS_SEC || 0 == m_lastHeartbeatTimeMS)
         {
-            // reset count.
-            count = 0;
+            // record heart beat time.
+            m_lastHeartbeatTimeMS = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                              std::chrono::steady_clock::now().time_since_epoch())
+                                                              .count());
 
             // heartbeat.
             auto ret = Heartbeat();

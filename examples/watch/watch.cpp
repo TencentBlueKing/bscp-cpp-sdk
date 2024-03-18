@@ -16,7 +16,7 @@
 #include <thread>
 #include <vector>
 
-#include "../../client.h"
+#include "client.h"
 
 int handle(const bscp::Release& release)
 {
@@ -52,10 +52,10 @@ int main(int argc, char** argv)
     options.m_sideRid = argv[8];
 
     bscp::Client client(options, LogHandle);
-    auto ret = client.InitialClient();
+    auto ret = client.Initialize();
     if (ret)
     {
-        std::cout << "failed to initial client" << std::endl;
+        std::cout << "failed to initialize client" << std::endl;
         return ret;
     }
 
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     std::string app = argv[10];
 
     // add watch.
-    ret = client.AddWatcher(handle, app, appOptions);
+    ret = client.AddWatcher(app, handle, appOptions);
     if (ret)
     {
         std::cout << "failed to add watcher" << std::endl;

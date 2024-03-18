@@ -25,13 +25,15 @@
 // grpc.
 #include <grpcpp/grpcpp.h>
 
-#include "../../third-party/lrucache11/LRUCache11.hpp"
-#include "../pkg/sf-share/type.h"
-#include "../pkg/type.h"
 #include "options.h"
-#include "pkg/protocol/core/base/base.pb.h"
-#include "pkg/protocol/feed-server/feed_server.pb.h"
 #include "upstream.h"
+
+#include "internal/pkg/protocol/core/base/base.pb.h"
+#include "internal/pkg/protocol/feed-server/feed_server.pb.h"
+#include "internal/pkg/sf-share/type.h"
+#include "internal/pkg/type.h"
+#include "internal/tools/lb/load_balance.h"
+#include "third-party/lrucache11/LRUCache11.hpp"
 
 #define FEED_MESSAGE_TYPE_BOUNCE 1
 #define FEED_MESSAGE_TYPE_PUBLISH_RELEASE 2
@@ -61,11 +63,12 @@ class Watcher final
 {
 public:
     Watcher(const ClientOptions& options, std::shared_ptr<grpc::Channel>& channel,
-            std::shared_ptr<lru11::Cache<std::string, std::string>>& cache)
+            std::shared_ptr<lru11::Cache<std::string, std::string>>& cache,
+            std::shared_ptr<lb::LoadBalance>& loadBalance)
         : m_channel(channel), m_options(options), m_watchFlag(false), m_reconnectSignal(false), m_cache(cache),
-          m_keepAliveFlag(false)
+          m_loadBalance(loadBalance), m_keepAliveFlag(false)
     {
-        m_upstream = std::make_shared<Upstream>(channel);
+        m_upstream = std::make_shared<Upstream>(m_channel);
     }
     ~Watcher() = default;
 
@@ -176,6 +179,9 @@ private:
     // lru cache.
     std::shared_ptr<lru11::Cache<std::string, std::string>> m_cache;
 
+    // load balance.
+    std::shared_ptr<lb::LoadBalance> m_loadBalance;
+
     // subscribers.
     std::vector<std::shared_ptr<Subscriber>> m_subscribers;
 
@@ -184,6 +190,9 @@ private:
 
     // upstream client.
     std::shared_ptr<Upstream> m_upstream;
+
+    // last heart beat time.
+    uint64_t m_lastHeartbeatTimeMS;
 };
 
 } // namespace bscp

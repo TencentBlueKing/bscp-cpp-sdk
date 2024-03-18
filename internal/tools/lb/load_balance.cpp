@@ -10,19 +10,43 @@
  * limitations under the License.
  */
 
-#ifndef _BSCP_CPP_SDK_TEST_COMMON_H_
-#define _BSCP_CPP_SDK_TEST_COMMON_H_
+#include "load_balance.h"
 
-#include <iostream>
-#include <string>
+#include "internal/error_code.h"
 
-#include "client.h"
-#include "third-party/catch2/catch.hpp"
+namespace bscp {
+namespace lb {
 
-#define CHECK_PARAMETER_EXIST(param) (g_argMap.find(param) == g_argMap.end() ? false : true)
+int LoadBalance::Initialize()
+{
+    return m_addrs.empty() ? BSCP_CPP_SDK_LOAD_BALANCE_ERROR : BSCP_CPP_SDK_OK;
+}
 
-int LogHandle(const bscp::log::LogLevel& level, const std::string& msg);
+std::string LoadBalance::Get()
+{
+    return m_addrs[m_cursor];
+}
 
-int handle(const bscp::Release& release);
+int LoadBalance::Update()
+{
+    auto ret = 0;
 
-#endif // _BSCP_CPP_SDK_TEST_COMMON_H_
+    if (LoadStrategy::rr == m_strategy)
+    {
+        ret = RoundRobin();
+    }
+
+    return BSCP_CPP_SDK_OK;
+}
+
+int LoadBalance::RoundRobin()
+{
+    int len = m_addrs.size();
+
+    m_cursor = (m_cursor + 1) % len;
+
+    return BSCP_CPP_SDK_OK;
+}
+
+} // namespace lb
+} // namespace bscp
