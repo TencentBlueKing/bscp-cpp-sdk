@@ -22,12 +22,12 @@
 #include <vector>
 
 // bscp-cpp-sdk.
-#include "../core/options.h"
-#include "../tools/finger_print.h"
-#include "sf-share/type.h"
+#include "internal/core/options.h"
+#include "internal/pkg/sf-share/type.h"
+#include "internal/tools/finger_print.h"
 
-#include "pkg/protocol/core/config-item/config_item.pb.h"
-#include "pkg/protocol/core/hook/hook.pb.h"
+#include "internal/pkg/protocol/core/config-item/config_item.pb.h"
+#include "internal/pkg/protocol/core/hook/hook.pb.h"
 
 namespace bscp {
 

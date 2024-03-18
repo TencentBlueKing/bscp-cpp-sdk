@@ -35,6 +35,7 @@ touch /usr/local/include/stropts.h
 # install the third-party dependences
 progress "start to install bscp-cpp-sdk thirdparty dependences"
 sh install_rapidjson.sh $WORKSPACE/rapidjson $fd $header_width &>>$WORKSPACE/message.out || fail "install rapidjson failed"
+sh install_grpc.sh $WORKSPACE/grpc $fd $header_width &>>$WORKSPACE/message.out || fail "install rapidjson failed"
 progress "success to install all bscp-cpp-sdk thirdparty dependences"
 
 exec 3>&- # close fd.

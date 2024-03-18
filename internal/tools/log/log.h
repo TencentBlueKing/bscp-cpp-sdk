@@ -19,7 +19,7 @@
 #include <sstream>
 #include <string>
 
-#include "../strings.h"
+#include "internal/tools/strings.h"
 
 namespace bscp {
 namespace log {
@@ -54,13 +54,13 @@ public:
 
 public:
     /**
-     * @brief InitialLog initial log.
+     * @brief InitializeLog initialize log.
      *
      * @param handle log handle function.
      *
      * @return return 0 if success, non zero if failed.
      */
-    int InitialLog(LogHandleFunc handle);
+    int InitializeLog(LogHandleFunc handle);
 
     /**
      * @brief GetLogMsg get log message.

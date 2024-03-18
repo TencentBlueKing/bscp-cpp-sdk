@@ -23,10 +23,8 @@
 #include <grpcpp/grpcpp.h>
 
 // sdk.
-#include "../tools/log/log.h"
-
-// proto.
-#include "pkg/protocol/feed-server/feed_server.grpc.pb.h"
+#include "internal/pkg/protocol/feed-server/feed_server.grpc.pb.h"
+#include "internal/tools/log/log.h"
 
 namespace bscp {
 

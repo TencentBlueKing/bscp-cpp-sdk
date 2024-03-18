@@ -32,12 +32,6 @@ int main(int argc, char** argv)
         g_argMap[argv[i]] = argv[i + 1];
     }
 
-    // auto ret = session.applyCommandLine(argc, argv);
-    // if (ret)
-    // {
-    //     return ret;
-    // }
-
     auto failedNum = session.run();
     return (failedNum < 0xff ? failedNum : 0xff);
 }

@@ -141,8 +141,10 @@ int ReleaseChangePayload::Unmarshal(const std::string& value)
                     auto pObj = object["permission"].GetObject();
 
                     ciMeta.m_configItemSpec.mutable_permission()->set_user(RAPIDJSON_GET_STRING(pObj, "user", ""));
-                    ciMeta.m_configItemSpec.mutable_permission()->set_user_group(RAPIDJSON_GET_STRING(pObj, "user_group", ""));
-                    ciMeta.m_configItemSpec.mutable_permission()->set_privilege(RAPIDJSON_GET_STRING(pObj, "privilege", ""));
+                    ciMeta.m_configItemSpec.mutable_permission()->set_user_group(
+                        RAPIDJSON_GET_STRING(pObj, "user_group", ""));
+                    ciMeta.m_configItemSpec.mutable_permission()->set_privilege(
+                        RAPIDJSON_GET_STRING(pObj, "privilege", ""));
                 }
             }
 
