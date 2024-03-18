@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-#include "../client.h"
+#include "client.h"
 #include "common.h"
 
 extern std::map<std::string, std::string> g_argMap;

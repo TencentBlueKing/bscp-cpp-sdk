@@ -52,7 +52,3 @@ cmake-build-debug/
 CMake*
 build/
 utest
-
-# proto
-*.pb.cc
-*.pb.h

@@ -1,56 +1,32 @@
-BUILD_DIR = ./build
-INTERNAL_PATH = ./internal
+.PHONY: all proto examples utest install clean
 
-BSCP_CPP_SDK_PATH = .
+default: all
 
-# includes
-INCLUDEF  = -I./
-INCLUDEF += -I${BUILD_DIR}/
-INCLUDEF += -I${BSCP_CPP_SDK_PATH}/
-INCLUDEF += -I${BSCP_CPP_SDK_PATH}/internal
-INCLUDEF += -I${BSCP_CPP_SDK_PATH}/third-party
-INCLUDEF += -I${GRPC_PATH}/include
+all: 
+	@$(MAKE) -f make_base.mk
 
-# compile
-PROGRAMSET  = -g -O2 -Wno-deprecated-declarations
-PROGRAMSET += -std=c++11
+proto:
+	@$(MAKE) -C internal
+	@echo -e "\033[32m\nBuilt Proto Successfully\n\033[0m"
 
-# command
-CXX = g++
-AR = ar
+examples:
+	@$(MAKE) -C examples/get
+	@$(MAKE) -C examples/pullkvs
+	@$(MAKE) -C examples/watch
+	@echo -e "\033[32m\nBuilt Examples Successfully\n\033[0m"
 
-TARGET := libbscp_sdk.a
+utest:
+	@$(MAKE) -C test
+	@echo -e "\033[32m\nBuilt Test Successfully\n\033[0m"
 
-SRCS := $(shell find ${BSCP_CPP_SDK_PATH} -name "client.cpp")
-SRCS += $(shell find ${BSCP_CPP_SDK_PATH}/internal -name "*.cpp")
-SRCS += $(shell find ${BSCP_CPP_SDK_PATH}/third-party -name "*.cpp")
-SRCS += $(shell find ${BSCP_CPP_SDK_PATH}/internal -name "*.cc")
-
-all: checkdirs $(TARGET)
-
-checkdirs:
-	@mkdir -p $(BUILD_DIR)
-
-# Combine all objects
-OBJS := $(SRCS:$(BSCP_CPP_SDK_PATH)/%.cc=$(BUILD_DIR)/%.o)
-OBJS := $(OBJS:$(BSCP_CPP_SDK_PATH)/%.cpp=$(BUILD_DIR)/%.o)
-
-# Compile protobuf generated .cc to object files
-$(BUILD_DIR)/%.o: $(BSCP_CPP_SDK_PATH)/%.cc
-	@mkdir -p $(dir $@)
-	$(CXX) $(INCLUDEF) $(PROGRAMSET) -MMD -c $< -o $@
-
-# Compile C++ source files to object files
-$(BUILD_DIR)/%.o: $(BSCP_CPP_SDK_PATH)/%.cpp
-	@mkdir -p $(dir $@)
-	$(CXX) $(INCLUDEF) $(PROGRAMSET) -MMD -c $< -o $@
-
-# Generate target executable
-$(TARGET): $(OBJS)
-	$(AR) -r $@ $(OBJS)
+install:
+	@$(MAKE) install -f make_base.mk
+	@echo -e "\033[32m\nInstalled bscp-cpp-sdk Successfully\n\033[0m"
 
 clean:
-	@rm -rf $(BUILD_DIR) $(TARGET)
-
-.PHONY: all checkdirs clean
-default: all
+	@$(MAKE) clean -s -f make_base.mk
+	@$(MAKE) clean -C examples/get
+	@$(MAKE) clean -C examples/pullkvs
+	@$(MAKE) clean -C examples/watch
+	@$(MAKE) clean -C test
+	@echo -e "\033[32m\nClean bscp-cpp-sdk Successfully\n\033[0m"

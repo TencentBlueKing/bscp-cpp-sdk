@@ -32,6 +32,7 @@
 #include "internal/pkg/sf-share/type.h"
 #include "internal/pkg/type.h"
 #include "internal/tools/finger_print.h"
+#include "internal/tools/lb/load_balance.h"
 #include "internal/tools/log/log.h"
 #include "third-party/lrucache11/LRUCache11.hpp"
 
@@ -41,17 +42,19 @@
 
 namespace bscp {
 
+class Watcher;
+
 /**
  * @brief Client. bscp client method.
  */
-class Client final
+class Client final : public std::enable_shared_from_this<Client>
 {
 public:
     Client(const ClientOptions& options, log::LogHandleFunc logHandleFunc)
         : m_options(options), m_logHandleFunc(logHandleFunc)
     {
-        // initial log.
-        log::Log::Instance().InitialLog(logHandleFunc);
+        // initialize log.
+        log::Log::Instance().InitializeLog(m_logHandleFunc);
     }
     ~Client() = default;
 
@@ -74,22 +77,22 @@ public:
      * @param app service name.
      * @param key key name.
      * @param opts app options.
-     * @param res the output result;
+     * @param value the output value;
      *
      * @return return 0 if success, non zero if failed.
      */
-    int Get(const std::string& app, const std::string& key, const AppOptions& opts, std::string& res);
+    int Get(const std::string& app, const std::string& key, const AppOptions& opts, std::string& value);
 
     /**
      * @brief AddWatcher add a watcher to client.
      *
-     * @param callback callback function.
      * @param app service name.
+     * @param callback callback function.
      * @param opts app options.
      *
      * @return return 0 if success, non zero if failed.
      */
-    int AddWatcher(Callback callback, const std::string& app, AppOptions& opts);
+    int AddWatcher(const std::string& app, Callback callback, AppOptions& opts);
 
     /**
      * @brief StartWatch start watch.
@@ -106,15 +109,15 @@ public:
     int StopWatch();
 
     /**
-     * @brief InitialClient
+     * @brief Initialize initialize client.
      *
      * @return return 0 if success, non zero if failed.
      */
-    int InitialClient();
+    int Initialize();
 
 private:
     // upstream client.
-    std::shared_ptr<bscp::Upstream> m_upstream;
+    std::shared_ptr<Upstream> m_upstream;
 
     // watcher.
     std::shared_ptr<Watcher> m_watcher;
@@ -130,6 +133,9 @@ private:
 
     // log handle function.
     log::LogHandleFunc m_logHandleFunc;
+
+    // load balance.
+    std::shared_ptr<lb::LoadBalance> m_loadBalance;
 };
 
 } // namespace bscp

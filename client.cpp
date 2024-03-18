@@ -15,9 +15,6 @@
 #include "internal/error_code.h"
 #include "pkg/protocol/feed-server/feed_server.pb.h"
 
-// grpc.
-#include <grpcpp/grpcpp.h>
-
 namespace bscp {
 
 int Client::PullKvs(const std::string& app, std::vector<std::string>& match, const AppOptions& opts, Release& release)
@@ -60,7 +57,7 @@ int Client::PullKvs(const std::string& app, std::vector<std::string>& match, con
     auto ret = SetContext(context, m_options);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to set grpc client context. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to set grpc client context. err-code(%d)", ret);
         return ret;
     }
 
@@ -69,7 +66,7 @@ int Client::PullKvs(const std::string& app, std::vector<std::string>& match, con
     ret = m_upstream->PullKvMeta(context, req, resp);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to pull kv meta. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to pull kv meta. err-code(%d)", ret);
         return ret;
     }
 
@@ -89,7 +86,7 @@ int Client::PullKvs(const std::string& app, std::vector<std::string>& match, con
     return BSCP_CPP_SDK_OK;
 }
 
-int Client::Get(const std::string& app, const std::string& key, const AppOptions& opts, std::string& res)
+int Client::Get(const std::string& app, const std::string& key, const AppOptions& opts, std::string& value)
 {
     // build req.
     auto req = std::make_shared<pbfs::GetKvValueReq>();
@@ -129,7 +126,7 @@ int Client::Get(const std::string& app, const std::string& key, const AppOptions
     auto ret = SetContext(context, m_options);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to set grpc client context. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to set grpc client context. err-code(%d)", ret);
         return ret;
     }
 
@@ -138,22 +135,22 @@ int Client::Get(const std::string& app, const std::string& key, const AppOptions
     ret = m_upstream->GetKvValue(context, req, resp);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to get kv value. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to get kv value. err-code(%d)", ret);
         return ret;
     }
 
-    // fill res;
-    res = resp->value();
+    // fill value;
+    value = resp->value();
 
     return BSCP_CPP_SDK_OK;
 }
 
-int Client::AddWatcher(Callback callback, const std::string& app, AppOptions& opts)
+int Client::AddWatcher(const std::string& app, Callback callback, AppOptions& opts)
 {
     auto ret = m_watcher->Subscribe(callback, app, opts);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to add watcher. app(%s), err-code(%d)", app.c_str(), ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to add watcher. app(%s), err-code(%d)", app.c_str(), ret);
         return ret;
     }
 
@@ -165,7 +162,7 @@ int Client::StartWatch()
     auto ret = m_watcher->StartWatch();
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to start watch. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to start watch. err-code(%d)", ret);
         return ret;
     }
 
@@ -177,14 +174,14 @@ int Client::StopWatch()
     auto ret = m_watcher->StopWatch();
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to stop watch. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to stop watch. err-code(%d)", ret);
         return ret;
     }
 
     return BSCP_CPP_SDK_OK;
 }
 
-int Client::InitialClient()
+int Client::Initialize()
 {
     if (m_options.m_feedAddrs.empty())
     {
@@ -192,30 +189,38 @@ int Client::InitialClient()
         return BSCP_CPP_SDK_CLIENT_INITIAL_ERROR;
     }
 
+    // initialize load balance.
+    m_loadBalance = std::make_shared<lb::LoadBalance>(lb::LoadStrategy::rr, m_options.m_feedAddrs);
+    if (m_loadBalance->Initialize())
+    {
+        LOG_ERROR("", "failed to initialize load balance");
+    }
+    LOG_INFO(m_loadBalance->Get(), "success to initialize load balance");
+
     if (m_options.m_fingerPrint.empty())
     {
         auto ret = bscp::GetMachineID(m_options.m_fingerPrint);
         if (ret)
         {
-            LOG_ERROR(m_options.m_feedAddrs[0], "failed to get machine id.");
+            LOG_ERROR("", "failed to get machine id.");
             return BSCP_CPP_SDK_CLIENT_INITIAL_ERROR;
         }
     }
 
     // create channel.
-    m_channel = grpc::CreateChannel(m_options.m_feedAddrs[0], grpc::InsecureChannelCredentials());
+    m_channel = grpc::CreateChannel(m_loadBalance->Get(), grpc::InsecureChannelCredentials());
 
-    // initial upstream.
+    // initialize upstream.
     m_upstream = std::make_shared<Upstream>(m_channel);
-    LOG_INFO(m_options.m_feedAddrs[0], "success to initial upstream.");
+    LOG_INFO(m_loadBalance->Get(), "success to initialize upstream");
 
-    // initial cache.
+    // initialize cache.
     m_cache = std::make_shared<lru11::Cache<std::string, std::string>>(64, 0);
-    LOG_INFO(m_options.m_feedAddrs[0], "success to initial cache.");
+    LOG_INFO(m_loadBalance->Get(), "success to initialize cache");
 
     // intial watcher.
-    m_watcher = std::make_shared<Watcher>(m_options, m_channel, m_cache);
-    LOG_INFO(m_options.m_feedAddrs[0], "success to initial watcher.");
+    m_watcher = std::make_shared<Watcher>(m_options, m_channel, m_cache, m_loadBalance);
+    LOG_INFO(m_loadBalance->Get(), "success to initialize watcher");
 
     // call handshake rpc.
     auto hsMsg = std::make_shared<pbfs::HandshakeMessage>();
@@ -243,7 +248,7 @@ int Client::InitialClient()
     auto ret = SetContext(context, m_options, true);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to set grpc client context. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to set grpc client context. err-code(%d)", ret);
         return ret;
     }
 
@@ -251,12 +256,12 @@ int Client::InitialClient()
     ret = m_upstream->Handshake(context, hsMsg, hsRep);
     if (ret)
     {
-        LOG_ERROR(m_options.m_feedAddrs[0], "failed to call grpc handshake. err-code(%d)", ret);
+        LOG_ERROR(m_loadBalance->Get(), "failed to call grpc handshake. err-code(%d)", ret);
         return ret;
     }
-    LOG_INFO(m_options.m_feedAddrs[0], "success to call handshake");
+    LOG_INFO(m_loadBalance->Get(), "success to call handshake");
 
-    LOG_INFO(m_options.m_feedAddrs[0], "success to initial bscp client");
+    LOG_INFO(m_loadBalance->Get(), "success to initialize bscp client");
 
     return BSCP_CPP_SDK_OK;
 }

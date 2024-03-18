@@ -111,7 +111,10 @@ int Log::GetLogMsg(const LogLevel& level, const std::string& file, const int lin
     res += "msg=" + msg + " ";
 
     // upstream.
-    res += "upstream=" + upstream + " ";
+    if (!upstream.empty())
+    {
+        res += "upstream=" + upstream + " ";
+    }
 
     return BSCP_CPP_SDK_OK;
 }
@@ -135,7 +138,7 @@ int Log::Print(const LogLevel& level, const std::string& file, const int line, c
     return BSCP_CPP_SDK_OK;
 }
 
-int Log::InitialLog(LogHandleFunc handle)
+int Log::InitializeLog(LogHandleFunc handle)
 {
     m_handle = handle;
     return BSCP_CPP_SDK_OK;

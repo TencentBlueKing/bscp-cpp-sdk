@@ -19,7 +19,7 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include "../tools/log/log.h"
+#include "internal/tools/log/log.h"
 
 namespace bscp {
 
@@ -31,10 +31,9 @@ struct ClientOptions
 public:
     ClientOptions() = default;
     ClientOptions(const ClientOptions& other)
-        : m_token(other.m_token), m_bizID(other.m_bizID), m_feedAddrs(other.m_feedAddrs),
-          m_labels(other.m_labels), m_uid(other.m_uid), m_dialTimeoutMS(other.m_dialTimeoutMS),
-          m_useFileCache(other.m_useFileCache), m_fileCacheDir(other.m_fileCacheDir),
-          m_fingerPrint(other.m_fingerPrint), m_sideRid(other.m_sideRid)
+        : m_token(other.m_token), m_bizID(other.m_bizID), m_feedAddrs(other.m_feedAddrs), m_labels(other.m_labels),
+          m_uid(other.m_uid), m_dialTimeoutMS(other.m_dialTimeoutMS), m_useFileCache(other.m_useFileCache),
+          m_fileCacheDir(other.m_fileCacheDir), m_fingerPrint(other.m_fingerPrint), m_sideRid(other.m_sideRid)
     {
     }
 
