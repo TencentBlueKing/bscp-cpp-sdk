@@ -19,9 +19,10 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include "internal/tools/log/log.h"
+#include "internal/module/log/log.h"
 
 namespace bscp {
+namespace core {
 
 /**
  * @brief ClientOptions bscp cpp sdk client options.
@@ -83,8 +84,9 @@ public:
  *
  * @return return 0 if success, non zero if failed.
  */
-int SetContext(std::shared_ptr<grpc::ClientContext>& context, const ClientOptions& options, bool isHandshake = false);
+int SetContext(std::shared_ptr<grpc::ClientContext> context, const ClientOptions& options, bool isHandshake = false);
 
+} // namespace core
 } // namespace bscp
 
 #endif // _BSCP_CPP_SDK_INTERNAL_CORE_OPTIONS_H_

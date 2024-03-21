@@ -1,4 +1,4 @@
-TARGET := utest
+TARGET := get
 
 .PHONY: all clean
 

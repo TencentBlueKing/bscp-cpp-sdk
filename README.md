@@ -57,4 +57,6 @@ sh third-party/install.sh
 
 ## License
 
-`bscp-cpp-sdk`是基于MIT协议， 详细请参考[LICENSE](./LICENSE.txt)。
+项目基于 MIT 协议，详细请参考 [LICENSE](./LICENSE.txt)。
+
+我们承诺未来不会更改适用于交付给任何人的当前项目版本的开源许可证（MIT 协议）。

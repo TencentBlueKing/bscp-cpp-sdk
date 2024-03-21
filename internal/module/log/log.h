@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-#ifndef _BSCP_CPP_SDK_INTERNAL_TOOLS_LOG_H_
-#define _BSCP_CPP_SDK_INTERNAL_TOOLS_LOG_H_
+#ifndef _BSCP_CPP_SDK_INTERNAL_LOG_H_
+#define _BSCP_CPP_SDK_INTERNAL_LOG_H_
 
 #include <chrono>
 #include <ctime>
@@ -32,7 +32,7 @@ enum class LogLevel
     error = 3
 };
 
-using LogHandleFunc = int (*)(const LogLevel& level, const std::string& msg);
+using LogHandlerFunc = int (*)(const LogLevel& level, const std::string& msg);
 
 class Log
 {
@@ -56,11 +56,11 @@ public:
     /**
      * @brief InitializeLog initialize log.
      *
-     * @param handle log handle function.
+     * @param handler log handle function.
      *
      * @return return 0 if success, non zero if failed.
      */
-    int InitializeLog(LogHandleFunc handle);
+    static void SetLogHandler(LogHandlerFunc handler);
 
     /**
      * @brief GetLogMsg get log message.
@@ -68,14 +68,13 @@ public:
      * @param level the log level.
      * @param file the log file name.
      * @param line the log file line.
-     * @param upstream sdk upstream name.
      * @param msg the log message.
      * @param res the output result.
      *
      * @return return 0 if success, non zero if failed.
      */
-    int GetLogMsg(const LogLevel& level, const std::string& file, const int line, const std::string& upstream,
-                  const std::string& msg, std::string& res);
+    int GetLogMsg(const LogLevel& level, const std::string& file, const int line, const std::string& msg,
+                  std::string& res);
 
     /**
      * @brief Print print log
@@ -83,21 +82,11 @@ public:
      * @param level the log level.
      * @param file the log file name.
      * @param line the log file line.
-     * @param upstream sdk upstream name.
      * @param msg the log message.
-     * @param handle log handle function.
      *
      * @return return 0 if success, non zero if failed.
      */
-    int Print(const LogLevel& level, const std::string& file, const int line, const std::string& upstream,
-              const std::string& msg, LogHandleFunc handle);
-
-    /**
-     * @brief GetLogHandle get log handle function.
-     *
-     * @return return log handle function.
-     */
-    LogHandleFunc GetLogHandle();
+    int Print(const LogLevel& level, const std::string& file, const int line, const std::string& msg);
 
 private:
     /**
@@ -111,30 +100,22 @@ private:
 
 private:
     // log handle function.
-    LogHandleFunc m_handle;
+    static LogHandlerFunc m_handler;
 };
 
 // NOTE: LOG internal format implement.
-#define BSCP_CPP_SDK_LOG_FORMAT(level, file, line, upstream, fmt, ...)                                                 \
+#define BSCP_CPP_SDK_LOG_FORMAT(level, file, line, fmt, ...)                                                           \
     do                                                                                                                 \
     {                                                                                                                  \
-        bscp::log::Log::Instance().Print(level, file, line, upstream, bscp::UtilFormat((fmt), ##__VA_ARGS__),          \
-                                         bscp::log::Log::Instance().GetLogHandle());                                   \
+        bscp::log::Log::Instance().Print(level, file, line, bscp::tools::UtilFormat((fmt), ##__VA_ARGS__));            \
     } while (0)
 
-#define LOG_DEBUG(upstream, fmt, ...)                                                                                  \
-    BSCP_CPP_SDK_LOG_FORMAT(bscp::log::LogLevel::debug, __FILE__, __LINE__, upstream, fmt, ##__VA_ARGS__)
-
-#define LOG_INFO(upstream, fmt, ...)                                                                                   \
-    BSCP_CPP_SDK_LOG_FORMAT(bscp::log::LogLevel::info, __FILE__, __LINE__, upstream, fmt, ##__VA_ARGS__)
-
-#define LOG_WARN(upstream, fmt, ...)                                                                                   \
-    BSCP_CPP_SDK_LOG_FORMAT(bscp::log::LogLevel::warn, __FILE__, __LINE__, upstream, fmt, ##__VA_ARGS__)
-
-#define LOG_ERROR(upstream, fmt, ...)                                                                                  \
-    BSCP_CPP_SDK_LOG_FORMAT(bscp::log::LogLevel::error, __FILE__, __LINE__, upstream, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(fmt, ...) BSCP_CPP_SDK_LOG_FORMAT(bscp::log::LogLevel::debug, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...) BSCP_CPP_SDK_LOG_FORMAT(bscp::log::LogLevel::info, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_WARN(fmt, ...) BSCP_CPP_SDK_LOG_FORMAT(bscp::log::LogLevel::warn, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...) BSCP_CPP_SDK_LOG_FORMAT(bscp::log::LogLevel::error, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
 } // namespace log
 } // namespace bscp
 
-#endif // _BSCP_CPP_SDK_INTERNAL_TOOLS_LOG_H_
+#endif // _BSCP_CPP_SDK_INTERNAL_LOG_H_

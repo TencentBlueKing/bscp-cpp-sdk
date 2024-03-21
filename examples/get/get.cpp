@@ -17,6 +17,7 @@
 
 #include "client.h"
 
+// define log handle function.
 int LogHandle(const bscp::log::LogLevel& level, const std::string& msg)
 {
     std::cout << msg << std::endl;
@@ -25,38 +26,51 @@ int LogHandle(const bscp::log::LogLevel& level, const std::string& msg)
 
 int main(int argc, char** argv)
 {
-    // ./utest -token your_token -addr your_address -bid your_bid -side_rid your_side_rid -app your_app -key your_key
+    // ./get -token {token} -addr {address} -bid {bid} -side_rid {side_rid} -app {app} -key {key}
     if (argc < 13 || strcmp(argv[1], "-token") || strcmp(argv[3], "-addr") || strcmp(argv[5], "-bid") ||
         strcmp(argv[7], "-side_rid") || strcmp(argv[9], "-app") || strcmp(argv[11], "-key"))
     {
-        std::cout << "parameters error!\nplease start the programme as follow: ./utest -token token -addr addr -bid "
-                     "bid -side_rid side_ird"
-                  << std::endl;
+        std::cout << "parameters error!\nusage: " << argv[0]
+                  << " -token {token} -addr {addr} -bid {bid} -side_rid {side_rid} -app {app} -key {key}" << std::endl;
+
         return 0;
     }
 
-    bscp::ClientOptions options;
+    // set client options.
+    bscp::core::ClientOptions options;
 
     options.m_token = argv[2];
     options.m_feedAddrs.push_back(argv[4]);
     options.m_bizID = std::stoi(argv[6]);
     options.m_sideRid = argv[8];
 
-    bscp::Client client(options, LogHandle);
-    bscp::AppOptions appOptions;
+    // instantiate client.
+    bscp::Client client(options);
+
+    // set log handle, if not set, no logs will be output.
+    bscp::log::Log::SetLogHandler(LogHandle);
+
+    // you must initialize before you use client.
+    auto ret = client.Initialize();
+    if (ret)
+    {
+        std::cout << "failed to initialize client" << std::endl;
+        return ret;
+    }
+
+    bscp::core::AppOptions appOptions;
     std::string app = argv[10];
 
     std::string value;
-
-    int count = 0;
-
-    auto ret = client.Get(app, argv[12], appOptions, value);
+    ret = client.Get(app, argv[12], appOptions, value);
     if (ret)
     {
-        std::cout << "something error" << std::endl;
+        std::cout << "call get error, err-code(" << ret << ")" << std::endl;
     }
     else
     {
+        // here is the value you get.
+        std::cout << "value: " << value << std::endl;
         std::cout << "call get success" << std::endl;
     }
 

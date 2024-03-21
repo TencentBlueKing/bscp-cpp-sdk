@@ -20,7 +20,7 @@ extern std::map<std::string, std::string> g_argMap;
 
 int TestInitialClient()
 {
-    bscp::ClientOptions options;
+    bscp::core::ClientOptions options;
 
     for (auto& iter : g_argMap)
     {
@@ -38,7 +38,7 @@ int TestInitialClient()
     options.m_bizID = std::stoi(g_argMap["-bid"]);
     options.m_sideRid = g_argMap["-side_rid"];
 
-    bscp::Client client(options, LogHandle);
+    bscp::Client client(options);
     auto ret = client.Initialize();
     if (ret)
     {
@@ -52,7 +52,7 @@ int TestContinueWatch()
 {
     std::cout << "==========================" << std::endl;
 
-    bscp::ClientOptions options;
+    bscp::core::ClientOptions options;
 
     if (!CHECK_PARAMETER_EXIST("-token") || !CHECK_PARAMETER_EXIST("-addr") || !CHECK_PARAMETER_EXIST("-bid") ||
         !CHECK_PARAMETER_EXIST("-side_rid") || !CHECK_PARAMETER_EXIST("-app"))
@@ -65,7 +65,10 @@ int TestContinueWatch()
     options.m_bizID = std::stoi(g_argMap["-bid"]);
     options.m_sideRid = g_argMap["-side_rid"];
 
-    bscp::Client client(options, LogHandle);
+    bscp::Client client(options);
+
+    // set log handle, if not set, no logs will be output.
+    bscp::log::Log::SetLogHandler(LogHandle);
 
     // initialize client.
     auto ret = client.Initialize();
@@ -76,7 +79,7 @@ int TestContinueWatch()
     }
     std::cout << "initialize client success" << std::endl;
 
-    bscp::AppOptions appOptions;
+    bscp::core::AppOptions appOptions;
     std::string app = g_argMap["-app"];
 
     // add watch.
@@ -123,7 +126,7 @@ int TestContinueStartStopWatch()
 {
     std::cout << "==========================" << std::endl;
 
-    bscp::ClientOptions options;
+    bscp::core::ClientOptions options;
 
     if (!CHECK_PARAMETER_EXIST("-token") || !CHECK_PARAMETER_EXIST("-addr") || !CHECK_PARAMETER_EXIST("-bid") ||
         !CHECK_PARAMETER_EXIST("-side_rid") || !CHECK_PARAMETER_EXIST("-app"))
@@ -136,7 +139,10 @@ int TestContinueStartStopWatch()
     options.m_bizID = std::stoi(g_argMap["-bid"]);
     options.m_sideRid = g_argMap["-side_rid"];
 
-    bscp::Client client(options, LogHandle);
+    bscp::Client client(options);
+
+    // set log handle, if not set, no logs will be output.
+    bscp::log::Log::SetLogHandler(LogHandle);
 
     // initialize client.
     auto ret = client.Initialize();
@@ -147,7 +153,7 @@ int TestContinueStartStopWatch()
     }
     std::cout << "initialize client success" << std::endl;
 
-    bscp::AppOptions appOptions;
+    bscp::core::AppOptions appOptions;
     std::string app = g_argMap["-app"];
 
     // add watch.

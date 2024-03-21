@@ -23,10 +23,11 @@
 #include <grpcpp/grpcpp.h>
 
 // sdk.
+#include "internal/module/log/log.h"
 #include "internal/pkg/protocol/feed-server/feed_server.grpc.pb.h"
-#include "internal/tools/log/log.h"
 
 namespace bscp {
+namespace core {
 
 /**
  * @brief Upstream.
@@ -47,8 +48,8 @@ public:
      *
      * @return return 0 if success, non-zero if failed.
      */
-    int Handshake(const std::shared_ptr<grpc::ClientContext>& context,
-                  const std::shared_ptr<pbfs::HandshakeMessage>& message, std::shared_ptr<pbfs::HandshakeResp>& resp);
+    int Handshake(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::HandshakeMessage> message,
+                  std::shared_ptr<pbfs::HandshakeResp> resp);
 
     /**
      * @brief Messaging.
@@ -59,19 +60,20 @@ public:
      *
      * @return return 0 if success, non-zero if failed.
      */
-    int Messaging(const std::shared_ptr<grpc::ClientContext>& context, const std::shared_ptr<pbfs::MessagingMeta>& meta,
-                  std::shared_ptr<pbfs::MessagingResp>& resp);
+    int Messaging(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::MessagingMeta> meta,
+                  std::shared_ptr<pbfs::MessagingResp> resp);
 
     /**
      * @brief Watch.
      *
      * @param context. grpc context.
      * @param meta. input meta.
-     * @param reader. grpc return reader, where can get the server message.
+     * @param reader. reader stream.
      *
-     * @return return 0 if success, non-zero if failed.
+     * @return return grpc reader, where can get the server message.
      */
-    int Watch(const std::shared_ptr<grpc::ClientContext>& context, const std::shared_ptr<pbfs::SideWatchMeta>& meta,
+
+    int Watch(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::SideWatchMeta> meta,
               std::unique_ptr<grpc::ClientReader<pbfs::FeedWatchMessage>>& reader);
 
     /**
@@ -83,9 +85,8 @@ public:
      *
      * @return return 0 if success, non-zero if failed.
      */
-    int PullAppFileMeta(const std::shared_ptr<grpc::ClientContext>& context,
-                        const std::shared_ptr<pbfs::PullAppFileMetaReq>& req,
-                        std::shared_ptr<pbfs::PullAppFileMetaResp>& resp);
+    int PullAppFileMeta(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::PullAppFileMetaReq> req,
+                        std::shared_ptr<pbfs::PullAppFileMetaResp> resp);
 
     /**
      * @brief GetDownloadURL.
@@ -96,9 +97,8 @@ public:
      *
      * @return return 0 if success, non-zero if failed.
      */
-    int GetDownloadURL(const std::shared_ptr<grpc::ClientContext>& context,
-                       const std::shared_ptr<pbfs::GetDownloadURLReq>& req,
-                       std::shared_ptr<pbfs::GetDownloadURLResp>& resp);
+    int GetDownloadURL(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::GetDownloadURLReq> req,
+                       std::shared_ptr<pbfs::GetDownloadURLResp> resp);
 
     /**
      * @brief PullKvMeta.
@@ -109,8 +109,8 @@ public:
      *
      * @return return 0 if success, non-zero if failed.
      */
-    int PullKvMeta(const std::shared_ptr<grpc::ClientContext>& context, const std::shared_ptr<pbfs::PullKvMetaReq>& req,
-                   std::shared_ptr<pbfs::PullKvMetaResp>& resp);
+    int PullKvMeta(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::PullKvMetaReq> req,
+                   std::shared_ptr<pbfs::PullKvMetaResp> resp);
 
     /**
      * @brief GetKvValue.
@@ -121,8 +121,8 @@ public:
      *
      * @return return 0 if success, non-zero if failed.
      */
-    int GetKvValue(const std::shared_ptr<grpc::ClientContext>& context, const std::shared_ptr<pbfs::GetKvValueReq>& req,
-                   std::shared_ptr<pbfs::GetKvValueResp>& resp);
+    int GetKvValue(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::GetKvValueReq> req,
+                   std::shared_ptr<pbfs::GetKvValueResp> resp);
 
     /**
      * @brief ListApps.
@@ -133,24 +133,15 @@ public:
      *
      * @return return 0 if success, non-zero if failed.
      */
-    int ListApps(const std::shared_ptr<grpc::ClientContext>& context, const std::shared_ptr<pbfs::ListAppsReq>& req,
-                 std::shared_ptr<pbfs::ListAppsResp>& resp);
-
-    /**
-     * @brief Reconnect.
-     *
-     * @param channel reconnect channel.
-     * @param retryCount max retry count.
-     *
-     * @return return 0 if success, non-zero if failed.
-     */
-    int Reconnect(std::shared_ptr<grpc::Channel>& channel, int retryCount);
+    int ListApps(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::ListAppsReq> req,
+                 std::shared_ptr<pbfs::ListAppsResp> resp);
 
 private:
     // grpc stub.
     std::unique_ptr<pbfs::Upstream::Stub> m_stub;
 };
 
+} // namespace core
 } // namespace bscp
 
 #endif // _BSCP_CPP_SDK_INTERNAL_CORE_UPSTREAM_H_

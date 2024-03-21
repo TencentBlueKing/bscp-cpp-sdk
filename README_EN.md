@@ -58,4 +58,6 @@ If you have good ideas or suggestions, please let us know by Issues or Pull Requ
 
 ## License
 
-bscp-cpp-sdk is based on the MIT protocol. Please refer to [LICENSE](./LICENSE.txt) for details.
+bscp-cpp-sdk is based on the MIT license. Please refer to [LICENSE](./LICENSE.txt) for details.
+
+We undertake not to change the open source license (MIT license) applicable to the current version of the project delivered to anyone in the future.

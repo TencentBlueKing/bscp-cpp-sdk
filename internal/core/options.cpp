@@ -17,8 +17,9 @@
 #include "internal/tools/finger_print.h"
 
 namespace bscp {
+namespace core {
 
-int SetContext(std::shared_ptr<grpc::ClientContext>& context, const ClientOptions& options, bool isHandshake)
+int SetContext(std::shared_ptr<grpc::ClientContext> context, const ClientOptions& options, bool isHandshake)
 {
     context->AddMetadata("authorization", "Bearer " + options.m_token);
 
@@ -32,7 +33,7 @@ int SetContext(std::shared_ptr<grpc::ClientContext>& context, const ClientOption
 
     if (options.m_fingerPrint.empty())
     {
-        auto ret = GetMachineID(sidecarMetaObj.m_fpt);
+        auto ret = bscp::tools::GetMachineID(sidecarMetaObj.m_fpt);
         if (ret)
         {
             return BSCP_CPP_SDK_SET_CONTEXT_ERROR;
@@ -55,4 +56,5 @@ int SetContext(std::shared_ptr<grpc::ClientContext>& context, const ClientOption
     return BSCP_CPP_SDK_OK;
 }
 
+} // namespace core
 } // namespace bscp

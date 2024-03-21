@@ -18,6 +18,7 @@
 
 #include "client.h"
 
+// define watch callback function.
 int handle(const bscp::Release& release)
 {
     std::cout << "running callback function" << std::endl;
@@ -27,6 +28,7 @@ int handle(const bscp::Release& release)
     return 0;
 }
 
+// define log handle function.
 int LogHandle(const bscp::log::LogLevel& level, const std::string& msg)
 {
     std::cout << msg << std::endl;
@@ -38,20 +40,27 @@ int main(int argc, char** argv)
     if (argc < 11 || strcmp(argv[1], "-token") || strcmp(argv[3], "-addr") || strcmp(argv[5], "-bid") ||
         strcmp(argv[7], "-side_rid") || strcmp(argv[9], "-app"))
     {
-        std::cout << "parameters error!\nplease start the programme as follow: ./utest -token token -addr addr -bid "
-                     "bid -side_rid side_ird"
-                  << std::endl;
+        std::cout << "parameters error!\nusage: " << argv[0]
+                  << " -token {token} -addr {addr} -bid {bid} -side_rid {side_rid} -app {app}" << std::endl;
+
         return 0;
     }
 
-    bscp::ClientOptions options;
+    // set client options.
+    bscp::core::ClientOptions options;
 
     options.m_token = argv[2];
     options.m_feedAddrs.push_back(argv[4]);
     options.m_bizID = std::stoi(argv[6]);
     options.m_sideRid = argv[8];
 
-    bscp::Client client(options, LogHandle);
+    // instantiate client.
+    bscp::Client client(options);
+
+    // set log handle, if not set, no logs will be output.
+    bscp::log::Log::SetLogHandler(LogHandle);
+
+    // you must initialize before you use client.
     auto ret = client.Initialize();
     if (ret)
     {
@@ -59,10 +68,11 @@ int main(int argc, char** argv)
         return ret;
     }
 
-    bscp::AppOptions appOptions;
+    bscp::core::AppOptions appOptions;
     std::string app = argv[10];
 
     // add watch.
+    // set handle function for the watch receive release data.
     ret = client.AddWatcher(app, handle, appOptions);
     if (ret)
     {
@@ -73,22 +83,21 @@ int main(int argc, char** argv)
         std::cout << "add watcher success" << std::endl;
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(60 * 2));
-
     // watch.
+    // call this to watch the bscp server, if bscp server publish new release, it will call the handle callback function
+    // user setted to handle the received release data.
     ret = client.StartWatch();
     if (ret)
     {
         std::cout << "failed to start watch" << std::endl;
     }
-    else
-    {
-        std::cout << "start watch success" << std::endl;
-    }
+    std::cout << "start watch success" << std::endl;
 
-    std::this_thread::sleep_for(std::chrono::seconds(60 * 5));
+    // in here, user can exec their tasks.
+    // feel free to call other client api in here, such as Client::Get(), Client::PullKvs().
+    std::cout << "exec other tasks" << std::endl;
 
-    // stop watch.
+    // when user does not need to watch, call stop watch to close the watch channel.
     ret = client.StopWatch();
     if (ret)
     {
@@ -98,8 +107,6 @@ int main(int argc, char** argv)
     {
         std::cout << "stop watch success" << std::endl;
     }
-
-    std::this_thread::sleep_for(std::chrono::seconds(60 * 5));
 
     return 0;
 }

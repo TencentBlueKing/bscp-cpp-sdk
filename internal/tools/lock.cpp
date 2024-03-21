@@ -10,20 +10,45 @@
  * limitations under the License.
  */
 
-#ifndef _BSCP_CPP_SDK_INTERNAL_TOOLS_STRINGS_H_
-#define _BSCP_CPP_SDK_INTERNAL_TOOLS_STRINGS_H_
-
-#include <cstdarg>
-#include <cstring>
-#include <memory>
-#include <string>
+#include "lock.h"
 
 namespace bscp {
 namespace tools {
 
-std::string UtilFormat(const char* fmt, ...);
+RWMutex::RWMutex()
+{
+    pthread_rwlock_init(&m_rwMutex, NULL);
+}
+
+RWMutex::~RWMutex()
+{
+    pthread_rwlock_destroy(&m_rwMutex);
+}
+
+int RWMutex::RLock()
+{
+    return pthread_rwlock_rdlock(&m_rwMutex);
+}
+
+int RWMutex::TryRLock()
+{
+    return pthread_rwlock_tryrdlock(&m_rwMutex);
+}
+
+int RWMutex::WLock()
+{
+    return pthread_rwlock_wrlock(&m_rwMutex);
+}
+
+int RWMutex::TryWLock()
+{
+    return pthread_rwlock_trywrlock(&m_rwMutex);
+}
+
+int RWMutex::Unlock()
+{
+    return pthread_rwlock_unlock(&m_rwMutex);
+}
 
 } // namespace tools
 } // namespace bscp
-
-#endif // _BSCP_CPP_SDK_INTERNAL_TOOLS_STRINGS_H_

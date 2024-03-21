@@ -16,6 +16,7 @@
 
 #include "client.h"
 
+// define log handle function.
 int LogHandle(const bscp::log::LogLevel& level, const std::string& msg)
 {
     std::cout << msg << std::endl;
@@ -27,33 +28,47 @@ int main(int argc, char** argv)
     if (argc < 11 || strcmp(argv[1], "-token") || strcmp(argv[3], "-addr") || strcmp(argv[5], "-bid") ||
         strcmp(argv[7], "-side_rid") | strcmp(argv[9], "-app"))
     {
-        std::cout << "parameters error!\nplease start the programme as follow: ./utest -token token -addr addr -bid "
-                     "bid -side_rid side_ird"
-                  << std::endl;
+        std::cout << "parameters error!\nusage: " << argv[0]
+                  << " -token {token} -addr {addr} -bid {bid} -side_rid {side_rid} -app {app}" << std::endl;
         return 0;
     }
 
-    bscp::ClientOptions options;
+    // set client options.
+    bscp::core::ClientOptions options;
 
     options.m_token = argv[2];
     options.m_feedAddrs.push_back(argv[4]);
     options.m_bizID = std::stoi(argv[6]);
     options.m_sideRid = argv[8];
 
-    bscp::Client client(options, LogHandle);
-    bscp::AppOptions appOptions;
+    // instantiate client.
+    bscp::Client client(options);
+
+    // set log handle, if not set, no logs will be output.
+    bscp::log::Log::SetLogHandler(LogHandle);
+
+    // you must initialize before you use client.
+    auto ret = client.Initialize();
+    if (ret)
+    {
+        std::cout << "failed to initialize client" << std::endl;
+        return ret;
+    }
+
+    bscp::core::AppOptions appOptions;
     std::string app = argv[10];
 
     std::vector<std::string> match;
     bscp::Release release;
 
-    auto ret = client.PullKvs(app, match, appOptions, release);
+    ret = client.PullKvs(app, match, appOptions, release);
     if (ret)
     {
-        std::cout << "something error" << std::endl;
+        std::cout << "call get error, err-code(" << ret << ")" << std::endl;
         return 0;
     }
 
+    std::cout << "release ID: " << release.m_releaseID << std::endl;
     std::cout << "call pull kvs success" << std::endl;
 
     return 0;

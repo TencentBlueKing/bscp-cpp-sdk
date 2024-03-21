@@ -11,7 +11,7 @@
  */
 
 #include "log.h"
-#include "../../error_code.h"
+#include "internal/error_code.h"
 
 // clang-format off
 
@@ -26,6 +26,8 @@
 namespace bscp {
 namespace log {
 
+LogHandlerFunc Log::m_handler = nullptr;
+
 int Log::LocalDateToString(std::string& res)
 {
     try
@@ -39,7 +41,7 @@ int Log::LocalDateToString(std::string& res)
         struct tm tmInfo;
         localtime_r(&local, &tmInfo);
 
-        char time[20];
+        char time[20] = {0};
         std::strftime(time, 20, "%Y-%m-%dT%H:%M:%S", &tmInfo);
         ss << time;
 
@@ -68,8 +70,8 @@ int Log::LocalDateToString(std::string& res)
     return BSCP_CPP_SDK_OK;
 }
 
-int Log::GetLogMsg(const LogLevel& level, const std::string& file, const int line, const std::string& upstream,
-                   const std::string& msg, std::string& res)
+int Log::GetLogMsg(const LogLevel& level, const std::string& file, const int line, const std::string& msg,
+                   std::string& res)
 {
     std::string time;
     auto ret = LocalDateToString(time);
@@ -110,43 +112,35 @@ int Log::GetLogMsg(const LogLevel& level, const std::string& file, const int lin
     // msg.
     res += "msg=" + msg + " ";
 
-    // upstream.
-    if (!upstream.empty())
-    {
-        res += "upstream=" + upstream + " ";
-    }
-
     return BSCP_CPP_SDK_OK;
 }
 
-int Log::Print(const LogLevel& level, const std::string& file, const int line, const std::string& upstream,
-               const std::string& msg, LogHandleFunc handle)
+int Log::Print(const LogLevel& level, const std::string& file, const int line, const std::string& msg)
 {
+    if (nullptr == m_handler)
+    {
+        return BSCP_CPP_SDK_NULL_LOG_HANDLER;
+    }
+
     std::string res;
-    auto ret = GetLogMsg(level, file, line, upstream, msg, res);
+    auto ret = GetLogMsg(level, file, line, msg, res);
     if (ret)
     {
         return ret;
     }
 
-    ret = handle(level, res);
+    ret = m_handler(level, res);
     if (ret)
     {
-        return BSCP_CPP_SDK_LOG_HANDLE_ERROR;
+        return BSCP_CPP_SDK_LOG_HANDLER_ERROR;
     }
 
     return BSCP_CPP_SDK_OK;
 }
 
-int Log::InitializeLog(LogHandleFunc handle)
+void Log::SetLogHandler(LogHandlerFunc handler)
 {
-    m_handle = handle;
-    return BSCP_CPP_SDK_OK;
-}
-
-LogHandleFunc Log::GetLogHandle()
-{
-    return m_handle;
+    m_handler = handler;
 }
 
 } // namespace log
