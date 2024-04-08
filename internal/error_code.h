@@ -27,9 +27,12 @@
 #define BSCP_CPP_SDK_CLIENT_INITIAL_ERROR  (9)
 #define BSCP_CPP_SDK_RECONNECT_ERROR       (10)
 #define BSCP_CPP_SDK_LOG_ERROR             (11)
-#define BSCP_CPP_SDK_LOG_HANDLE_ERROR      (12)
+#define BSCP_CPP_SDK_LOG_HANDLER_ERROR     (12)
 #define BSCP_CPP_SDK_START_WATCH_ERROR     (13)
-#define BSCP_CPP_SDK_LOAD_BALANCE_ERROR    (14)
+#define BSCP_CPP_SDK_LB_INITIAL_ERROR      (14)
+#define BSCP_CPP_SDK_WATCH_ERROR           (15)
+#define BSCP_CPP_SDK_STUB_ERROR            (16)
+#define BSCP_CPP_SDK_NULL_LOG_HANDLER      (17)
 
 // clang-format on
 

@@ -13,6 +13,7 @@
 #include "strings.h"
 
 namespace bscp {
+namespace tools {
 
 std::string UtilFormat(const char* fmt, ...)
 {
@@ -38,4 +39,5 @@ std::string UtilFormat(const char* fmt, ...)
     }
 }
 
+} // namespace tools
 } // namespace bscp

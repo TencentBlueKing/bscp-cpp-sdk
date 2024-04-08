@@ -28,12 +28,12 @@
 // bscp-cpp-sdk.
 #include "internal/core/options.h"
 #include "internal/core/upstream.h"
-#include "internal/core/watch.h"
+#include "internal/module/lb/load_balance.h"
+#include "internal/module/log/log.h"
 #include "internal/pkg/sf-share/type.h"
 #include "internal/pkg/type.h"
 #include "internal/tools/finger_print.h"
-#include "internal/tools/lb/load_balance.h"
-#include "internal/tools/log/log.h"
+#include "internal/tools/lock.h"
 #include "third-party/lrucache11/LRUCache11.hpp"
 
 // protocol.
@@ -42,21 +42,18 @@
 
 namespace bscp {
 
-class Watcher;
-
 /**
  * @brief Client. bscp client method.
  */
 class Client final : public std::enable_shared_from_this<Client>
 {
 public:
-    Client(const ClientOptions& options, log::LogHandleFunc logHandleFunc)
-        : m_options(options), m_logHandleFunc(logHandleFunc)
+    Client(const core::ClientOptions& options)
+        : m_options(options), m_watchFlag(false), m_keepAliveFlag(false), m_readerValidFlag(true),
+          m_reconnectSignal(false), m_initialFlag(false), m_lastHeartbeatTimeMS(0)
     {
-        // initialize log.
-        log::Log::Instance().InitializeLog(m_logHandleFunc);
     }
-    ~Client() = default;
+    ~Client();
 
 public:
     /**
@@ -69,7 +66,8 @@ public:
      *
      * @return return 0 if success, non zero if failed.
      */
-    int PullKvs(const std::string& app, std::vector<std::string>& match, const AppOptions& opts, Release& release);
+    int PullKvs(const std::string& app, std::vector<std::string>& match, const core::AppOptions& opts,
+                Release& release);
 
     /**
      * @brief Get pull key value from remote.
@@ -81,7 +79,7 @@ public:
      *
      * @return return 0 if success, non zero if failed.
      */
-    int Get(const std::string& app, const std::string& key, const AppOptions& opts, std::string& value);
+    int Get(const std::string& app, const std::string& key, const core::AppOptions& opts, std::string& value);
 
     /**
      * @brief AddWatcher add a watcher to client.
@@ -92,7 +90,7 @@ public:
      *
      * @return return 0 if success, non zero if failed.
      */
-    int AddWatcher(const std::string& app, Callback callback, AppOptions& opts);
+    int AddWatcher(const std::string& app, Callback callback, core::AppOptions& opts);
 
     /**
      * @brief StartWatch start watch.
@@ -116,14 +114,92 @@ public:
     int Initialize();
 
 private:
-    // upstream client.
-    std::shared_ptr<Upstream> m_upstream;
+    /**
+     * @brief WatchFunc watch func.
+     *
+     * @return void.
+     */
+    void WatchFunc();
 
-    // watcher.
-    std::shared_ptr<Watcher> m_watcher;
+    /**
+     * @brief Heartbeat heart beat.
+     *
+     * @return return 0 if success, non zero if failed.
+     */
+    int Heartbeat();
+
+    /**
+     * @brief KeepAlive keep channel alive.
+     *
+     * @return void.
+     */
+    void KeepAliveFunc();
+
+    /**
+     * @brief IsApiVersionMatch check api version.
+     *
+     * @param apiVersion input api version.
+     *
+     * @return return true if matched, false if unmatched.
+     */
+    bool IsApiVersionMatch(const pbbase::Versioning& apiVersion);
+
+    /**
+     * @brief OnReleaseChange handle all instances release change event.
+     *
+     * @param event release change event.
+     *
+     * @return return 0 if success, non zero if failed.
+     */
+    int OnReleaseChange(const sfs::ReleaseChangeEvent& event);
+
+    /**
+     * @brief Reconnect reconnect to server.
+     *
+     * @return return 0 if success, non zero if failed.
+     */
+    int Reconnect();
+
+private:
+    // subscribers.
+    std::vector<std::shared_ptr<Subscriber>> m_subscribers;
+
+    // start watch flag, watch thread ending signal.
+    std::atomic<bool> m_watchFlag;
+
+    // watch thread.
+    std::thread m_watchThread;
+
+    // keep alive flag.
+    std::atomic<bool> m_keepAliveFlag;
+
+    // keep alive thread.
+    std::thread m_keepAliveThread;
+
+    // watch data payload.
+    std::string m_payload;
+
+    // watch return grpc reader stream.
+    std::unique_ptr<grpc::ClientReader<pbfs::FeedWatchMessage>> m_reader;
+
+    // watch client context.
+    std::shared_ptr<grpc::ClientContext> m_readerContext;
+
+    // reader valid flag.
+    std::atomic<bool> m_readerValidFlag;
+
+    // reconnect signal, send from work thread.
+    std::atomic<bool> m_reconnectSignal;
+
+    // last heart beat time.
+    uint64_t m_lastHeartbeatTimeMS;
+
+private:
+    // upstream client.
+    std::shared_ptr<core::Upstream> m_upstream;
 
     // client options.
-    ClientOptions m_options;
+    core::ClientOptions m_options;
 
     // grpc channel.
     std::shared_ptr<grpc::Channel> m_channel;
@@ -131,11 +207,11 @@ private:
     // lru cache.
     std::shared_ptr<lru11::Cache<std::string, std::string>> m_cache;
 
-    // log handle function.
-    log::LogHandleFunc m_logHandleFunc;
+    // load balancer.
+    std::shared_ptr<lb::LoadBalancer> m_loadBalancer;
 
-    // load balance.
-    std::shared_ptr<lb::LoadBalance> m_loadBalance;
+    // initialize flag.
+    std::atomic<bool> m_initialFlag;
 };
 
 } // namespace bscp

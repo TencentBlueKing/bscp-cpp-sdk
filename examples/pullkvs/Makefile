@@ -1,4 +1,4 @@
-TARGET := utest
+TARGET := pullkvs
 
 .PHONY: all clean
 

@@ -13,6 +13,7 @@
 #include "finger_print.h"
 
 namespace bscp {
+namespace tools {
 
 std::string GetRandString(int len)
 {
@@ -70,4 +71,5 @@ int GetMachineID(std::string& machineID)
     return BSCP_CPP_SDK_OK;
 }
 
+} // namespace tools
 } // namespace bscp

@@ -22,6 +22,7 @@
 #include "internal/error_code.h"
 
 namespace bscp {
+namespace tools {
 
 /**
  * @brief GetRandString get a random string with specified length.
@@ -41,6 +42,7 @@ std::string GetRandString(int len);
  */
 int GetMachineID(std::string& machineID);
 
+} // namespace tools
 } // namespace bscp
 
 #endif // _BSCP_CPP_SDK_INTERNAL_TOOLS_FINGER_PRINT_H_

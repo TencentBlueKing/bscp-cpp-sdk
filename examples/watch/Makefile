@@ -1,4 +1,4 @@
-TARGET := utest
+TARGET := watch
 
 .PHONY: all clean
 

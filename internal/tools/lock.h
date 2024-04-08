@@ -10,43 +10,34 @@
  * limitations under the License.
  */
 
-#include "load_balance.h"
+#ifndef _BSCP_CPP_SDK_INTERNAL_TOOLS_LOCK_H_
+#define _BSCP_CPP_SDK_INTERNAL_TOOLS_LOCK_H_
 
-#include "internal/error_code.h"
+#ifdef __linux__
+#include <pthread.h>
+#endif
 
 namespace bscp {
-namespace lb {
+namespace tools {
 
-int LoadBalance::Initialize()
+class RWMutex
 {
-    return m_addrs.empty() ? BSCP_CPP_SDK_LOAD_BALANCE_ERROR : BSCP_CPP_SDK_OK;
-}
+public:
+    RWMutex();
+    ~RWMutex();
 
-std::string LoadBalance::Get()
-{
-    return m_addrs[m_cursor];
-}
+public:
+    int RLock();
+    int TryRLock();
+    int WLock();
+    int TryWLock();
+    int Unlock();
 
-int LoadBalance::Update()
-{
-    auto ret = 0;
+private:
+    pthread_rwlock_t m_rwMutex;
+};
 
-    if (LoadStrategy::rr == m_strategy)
-    {
-        ret = RoundRobin();
-    }
-
-    return BSCP_CPP_SDK_OK;
-}
-
-int LoadBalance::RoundRobin()
-{
-    int len = m_addrs.size();
-
-    m_cursor = (m_cursor + 1) % len;
-
-    return BSCP_CPP_SDK_OK;
-}
-
-} // namespace lb
+} // namespace tools
 } // namespace bscp
+
+#endif // _BSCP_CPP_SDK_INTERNAL_TOOLS_LOCK_H_

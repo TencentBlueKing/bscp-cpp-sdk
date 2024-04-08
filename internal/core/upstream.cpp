@@ -15,160 +15,160 @@
 #include "internal/error_code.h"
 
 namespace bscp {
+namespace core {
 
-int Upstream::Handshake(const std::shared_ptr<grpc::ClientContext>& context,
-                        const std::shared_ptr<pbfs::HandshakeMessage>& message,
-                        std::shared_ptr<pbfs::HandshakeResp>& resp)
+int Upstream::Handshake(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::HandshakeMessage> message,
+                        std::shared_ptr<pbfs::HandshakeResp> resp)
 {
     // validate input param.
-    if (nullptr == message)
+    if (nullptr == context || nullptr == message || nullptr == resp)
     {
         return BSCP_CPP_SDK_INVALID_PARAM;
     }
 
-    // allocate memory if resp is nullptr.
-    if (nullptr == resp)
+    // check stub.
+    if (nullptr == m_stub)
     {
-        resp = std::make_shared<pbfs::HandshakeResp>();
+        return BSCP_CPP_SDK_STUB_ERROR;
     }
 
-    grpc::Status status = m_stub->Handshake(context.get(), *message.get(), resp.get());
+    grpc::Status status = m_stub->Handshake(context.get(), *message, resp.get());
 
     // validate grpc status.
     if (!status.ok())
     {
-        LOG_ERROR("", "failed to call grpc handshake. err-msg(%s)", status.error_message().c_str());
+        LOG_ERROR("failed to call grpc handshake. err-msg(%s)", status.error_message().c_str());
         return BSCP_CPP_SDK_GRPC_ERROR;
     }
 
     // validate grpc response.
     if (!resp->has_api_version())
     {
-        LOG_WARN("", "failed to call grpc handshake, invalided response.");
+        LOG_WARN("failed to call grpc handshake, invalided response");
         return BSCP_CPP_SDK_GRPC_ERROR;
     }
 
     return BSCP_CPP_SDK_OK;
 }
 
-int Upstream::Messaging(const std::shared_ptr<grpc::ClientContext>& context,
-                        const std::shared_ptr<pbfs::MessagingMeta>& meta, std::shared_ptr<pbfs::MessagingResp>& resp)
+int Upstream::Messaging(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::MessagingMeta> meta,
+                        std::shared_ptr<pbfs::MessagingResp> resp)
 {
     // validate input param.
-    if (nullptr == meta)
+    if (nullptr == context || nullptr == meta || nullptr == resp)
     {
         return BSCP_CPP_SDK_INVALID_PARAM;
     }
 
-    // allocate memory if resp is nullptr.
-    if (nullptr == resp)
+    // check stub.
+    if (nullptr == m_stub)
     {
-        resp = std::make_shared<pbfs::MessagingResp>();
+        return BSCP_CPP_SDK_STUB_ERROR;
     }
 
-    grpc::Status status = m_stub->Messaging(context.get(), *meta.get(), resp.get());
+    grpc::Status status = m_stub->Messaging(context.get(), *meta, resp.get());
 
     // validate grpc status.
     if (!status.ok())
     {
-        LOG_ERROR("", "failed to call grpc messaging. err-msg(%s)", status.error_message().c_str());
+        LOG_ERROR("failed to call grpc messaging. err-msg(%s)", status.error_message().c_str());
         return BSCP_CPP_SDK_GRPC_ERROR;
     }
 
     return BSCP_CPP_SDK_OK;
 }
 
-int Upstream::Watch(const std::shared_ptr<grpc::ClientContext>& context,
-                    const std::shared_ptr<pbfs::SideWatchMeta>& meta,
+int Upstream::Watch(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::SideWatchMeta> meta,
                     std::unique_ptr<grpc::ClientReader<pbfs::FeedWatchMessage>>& reader)
 {
     // validate input param.
-    if (nullptr == meta)
+    if (nullptr == context || nullptr == meta)
     {
-        LOG_ERROR("", "the meta of the watch request is nullptr");
         return BSCP_CPP_SDK_INVALID_PARAM;
     }
 
-    // call handshake.
+    if (nullptr == m_stub)
+    {
+        return BSCP_CPP_SDK_STUB_ERROR;
+    }
 
     // get the reader stream.
-    reader = m_stub->Watch(context.get(), *meta.get());
+    reader = m_stub->Watch(context.get(), *meta);
 
     return BSCP_CPP_SDK_OK;
 }
 
-int Upstream::PullAppFileMeta(const std::shared_ptr<grpc::ClientContext>& context,
-                              const std::shared_ptr<pbfs::PullAppFileMetaReq>& req,
-                              std::shared_ptr<pbfs::PullAppFileMetaResp>& resp)
+int Upstream::PullAppFileMeta(std::shared_ptr<grpc::ClientContext> context,
+                              std::shared_ptr<pbfs::PullAppFileMetaReq> req,
+                              std::shared_ptr<pbfs::PullAppFileMetaResp> resp)
 {
     // validate input param.
-    if (nullptr == req)
+    if (nullptr == context || nullptr == req || nullptr == resp)
     {
         return BSCP_CPP_SDK_INVALID_PARAM;
     }
 
-    // allocate memory if resp is nullptr.
-    if (nullptr == resp)
+    // check stub.
+    if (nullptr == m_stub)
     {
-        resp = std::make_shared<pbfs::PullAppFileMetaResp>();
+        return BSCP_CPP_SDK_STUB_ERROR;
     }
 
-    grpc::Status status = m_stub->PullAppFileMeta(context.get(), *req.get(), resp.get());
+    grpc::Status status = m_stub->PullAppFileMeta(context.get(), *req, resp.get());
 
     // validate grpc status.
     if (!status.ok())
     {
-        LOG_ERROR("", "failed to call grpc pull app file meta. err-msg(%s)", status.error_message().c_str());
+        LOG_ERROR("failed to call grpc pull app file meta. err-msg(%s)", status.error_message().c_str());
         return BSCP_CPP_SDK_GRPC_ERROR;
     }
 
     return BSCP_CPP_SDK_OK;
 }
 
-int Upstream::GetDownloadURL(const std::shared_ptr<grpc::ClientContext>& context,
-                             const std::shared_ptr<pbfs::GetDownloadURLReq>& req,
-                             std::shared_ptr<pbfs::GetDownloadURLResp>& resp)
+int Upstream::GetDownloadURL(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::GetDownloadURLReq> req,
+                             std::shared_ptr<pbfs::GetDownloadURLResp> resp)
 {
     // validate input param.
-    if (nullptr == req)
+    if (nullptr == context || nullptr == req || nullptr == resp)
     {
         return BSCP_CPP_SDK_INVALID_PARAM;
     }
 
-    // allocate memory if resp is nullptr.
-    if (nullptr == resp)
+    // check stub.
+    if (nullptr == m_stub)
     {
-        resp = std::make_shared<pbfs::GetDownloadURLResp>();
+        return BSCP_CPP_SDK_STUB_ERROR;
     }
 
-    grpc::Status status = m_stub->GetDownloadURL(context.get(), *req.get(), resp.get());
+    grpc::Status status = m_stub->GetDownloadURL(context.get(), *req, resp.get());
 
     // validate grpc status.
     if (!status.ok())
     {
-        LOG_ERROR("", "failed to call grpc get download url. err-msg(%s)", status.error_message().c_str());
+        LOG_ERROR("failed to call grpc get download url. err-msg(%s)", status.error_message().c_str());
         return BSCP_CPP_SDK_GRPC_ERROR;
     }
 
     return BSCP_CPP_SDK_OK;
 }
 
-int Upstream::PullKvMeta(const std::shared_ptr<grpc::ClientContext>& context,
-                         const std::shared_ptr<pbfs::PullKvMetaReq>& req, std::shared_ptr<pbfs::PullKvMetaResp>& resp)
+int Upstream::PullKvMeta(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::PullKvMetaReq> req,
+                         std::shared_ptr<pbfs::PullKvMetaResp> resp)
 {
     // validate input param.
-    if (nullptr == req)
+    if (nullptr == context || nullptr == req || nullptr == resp)
     {
         return BSCP_CPP_SDK_INVALID_PARAM;
     }
 
-    // allocate memory if resp is nullptr.
-    if (nullptr == resp)
+    // check stub.
+    if (nullptr == m_stub)
     {
-        resp = std::make_shared<pbfs::PullKvMetaResp>();
+        return BSCP_CPP_SDK_STUB_ERROR;
     }
 
-    grpc::Status status = m_stub->PullKvMeta(context.get(), *req.get(), resp.get());
+    grpc::Status status = m_stub->PullKvMeta(context.get(), *req, resp.get());
 
     // validate grpc status.
     if (!status.ok())
@@ -179,76 +179,59 @@ int Upstream::PullKvMeta(const std::shared_ptr<grpc::ClientContext>& context,
     return BSCP_CPP_SDK_OK;
 }
 
-int Upstream::GetKvValue(const std::shared_ptr<grpc::ClientContext>& context,
-                         const std::shared_ptr<pbfs::GetKvValueReq>& req, std::shared_ptr<pbfs::GetKvValueResp>& resp)
+int Upstream::GetKvValue(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::GetKvValueReq> req,
+                         std::shared_ptr<pbfs::GetKvValueResp> resp)
 {
     // validate input param.
-    if (nullptr == req)
+    if (nullptr == context || nullptr == req || nullptr == resp)
     {
         return BSCP_CPP_SDK_INVALID_PARAM;
     }
 
-    // allocate memory if resp is nullptr.
-    if (nullptr == resp)
+    // check stub.
+    if (nullptr == m_stub)
     {
-        resp = std::make_shared<pbfs::GetKvValueResp>();
+        return BSCP_CPP_SDK_STUB_ERROR;
     }
 
-    grpc::Status status = m_stub->GetKvValue(context.get(), *req.get(), resp.get());
+    grpc::Status status = m_stub->GetKvValue(context.get(), *req, resp.get());
 
     // validate grpc status.
     if (!status.ok())
     {
-        LOG_ERROR("", "failed to call grpc get kv value. err-msg(%s)", status.error_message().c_str());
+        LOG_ERROR("failed to call grpc get kv value. err-msg(%s)", status.error_message().c_str());
         return BSCP_CPP_SDK_GRPC_ERROR;
     }
 
     return BSCP_CPP_SDK_OK;
 }
 
-int Upstream::ListApps(const std::shared_ptr<grpc::ClientContext>& context,
-                       const std::shared_ptr<pbfs::ListAppsReq>& req, std::shared_ptr<pbfs::ListAppsResp>& resp)
+int Upstream::ListApps(std::shared_ptr<grpc::ClientContext> context, std::shared_ptr<pbfs::ListAppsReq> req,
+                       std::shared_ptr<pbfs::ListAppsResp> resp)
 {
     // validate input param.
-    if (nullptr == req)
+    if (nullptr == context || nullptr == req || nullptr == resp)
     {
         return BSCP_CPP_SDK_INVALID_PARAM;
     }
 
-    // allocate memory if resp is nullptr.
-    if (nullptr == resp)
+    // check stub.
+    if (nullptr == m_stub)
     {
-        resp = std::make_shared<pbfs::ListAppsResp>();
+        return BSCP_CPP_SDK_STUB_ERROR;
     }
 
-    grpc::Status status = m_stub->ListApps(context.get(), *req.get(), resp.get());
+    grpc::Status status = m_stub->ListApps(context.get(), *req, resp.get());
 
     // validate grpc status.
     if (!status.ok())
     {
-        LOG_ERROR("", "failed to call grpc list apps. err-msg(%s)", status.error_message().c_str());
+        LOG_ERROR("failed to call grpc list apps. err-msg(%s)", status.error_message().c_str());
         return BSCP_CPP_SDK_GRPC_ERROR;
     }
 
     return BSCP_CPP_SDK_OK;
 }
 
-int Upstream::Reconnect(std::shared_ptr<grpc::Channel>& channel, int retryCount)
-{
-    int count = 0;
-
-    while (count < retryCount)
-    {
-        // exponential backoff.
-        if (count)
-        {
-            std::this_thread::sleep_for(std::chrono::seconds(1 << count));
-        }
-
-        m_stub = pbfs::Upstream::NewStub(channel);
-    }
-
-    return BSCP_CPP_SDK_OK;
-}
-
+} // namespace core
 } // namespace bscp

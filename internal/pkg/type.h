@@ -79,6 +79,22 @@ struct SidecarMeta
 // callback function define.
 using Callback = int (*)(const Release&);
 
+struct Subscriber
+{
+    core::AppOptions m_option;
+    std::string m_app;
+    // the callback function when the watched items are changed.
+    Callback m_callback;
+    // the current release id of the subscriber.
+    uint32_t m_currentReleaseID = 0;
+    // the labels of the subscriber.
+    std::map<std::string, std::string> m_labels;
+    // the unique id of the subscriber.
+    std::string m_uid;
+    // store the current config items of the subscriber, map[configItemName]commitID.
+    std::map<std::string, uint32_t> m_currentConfigItems;
+};
+
 } // namespace bscp
 
 #endif // _BSCP_CPP_SDK_INTERNAL_PKG_TYPE_H_
