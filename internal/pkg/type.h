@@ -77,7 +77,7 @@ struct SidecarMeta
 };
 
 // callback function define.
-using Callback = int (*)(const Release&);
+using Callback = std::function<int(const Release&)>;
 
 struct Subscriber
 {

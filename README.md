@@ -28,7 +28,8 @@ sh third-party/install.sh
 - **make**: `bscp-cpp-sdk`编译
 - **make install**: `bscp-cpp-sdk`安装
 - **make examples**: examples编译
-- **make utest**: 单元测试编译
+- **make test**: 单元测试编译
+- **make deps**: 依赖安装
 
 ## Roadmap
 
