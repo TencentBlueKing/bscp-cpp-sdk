@@ -15,6 +15,7 @@
 
 #include <chrono>
 #include <ctime>
+#include <functional>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -32,7 +33,7 @@ enum class LogLevel
     error = 3
 };
 
-using LogHandlerFunc = int (*)(const LogLevel& level, const std::string& msg);
+using LogHandlerFunc = std::function<int(const LogLevel&, const std::string&)>;
 
 class Log
 {
@@ -73,8 +74,7 @@ public:
      *
      * @return return 0 if success, non zero if failed.
      */
-    int GetLogMsg(const LogLevel& level, const std::string& file, const int line, const std::string& msg,
-                  std::string& res);
+    int GetLogMsg(const LogLevel& level, const std::string& file, const int line, const std::string& msg, std::string& res);
 
     /**
      * @brief Print print log
@@ -104,10 +104,10 @@ private:
 };
 
 // NOTE: LOG internal format implement.
-#define BSCP_CPP_SDK_LOG_FORMAT(level, file, line, fmt, ...)                                                           \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        bscp::log::Log::Instance().Print(level, file, line, bscp::tools::UtilFormat((fmt), ##__VA_ARGS__));            \
+#define BSCP_CPP_SDK_LOG_FORMAT(level, file, line, fmt, ...)                                                                                         \
+    do                                                                                                                                               \
+    {                                                                                                                                                \
+        bscp::log::Log::Instance().Print(level, file, line, bscp::tools::UtilFormat((fmt), ##__VA_ARGS__));                                          \
     } while (0)
 
 #define LOG_DEBUG(fmt, ...) BSCP_CPP_SDK_LOG_FORMAT(bscp::log::LogLevel::debug, __FILE__, __LINE__, fmt, ##__VA_ARGS__)

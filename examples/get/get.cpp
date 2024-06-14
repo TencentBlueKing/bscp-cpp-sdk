@@ -17,21 +17,14 @@
 
 #include "client.h"
 
-// define log handle function.
-int LogHandle(const bscp::log::LogLevel& level, const std::string& msg)
-{
-    std::cout << msg << std::endl;
-    return 0;
-}
-
 int main(int argc, char** argv)
 {
     // ./get -token {token} -addr {address} -bid {bid} -side_rid {side_rid} -app {app} -key {key}
-    if (argc < 13 || strcmp(argv[1], "-token") || strcmp(argv[3], "-addr") || strcmp(argv[5], "-bid") ||
-        strcmp(argv[7], "-side_rid") || strcmp(argv[9], "-app") || strcmp(argv[11], "-key"))
+    if (argc < 13 || strcmp(argv[1], "-token") || strcmp(argv[3], "-addr") || strcmp(argv[5], "-bid") || strcmp(argv[7], "-side_rid") ||
+        strcmp(argv[9], "-app") || strcmp(argv[11], "-key"))
     {
-        std::cout << "parameters error!\nusage: " << argv[0]
-                  << " -token {token} -addr {addr} -bid {bid} -side_rid {side_rid} -app {app} -key {key}" << std::endl;
+        std::cout << "parameters error!\nusage: " << argv[0] << " -token {token} -addr {addr} -bid {bid} -side_rid {side_rid} -app {app} -key {key}"
+                  << std::endl;
 
         return 0;
     }
@@ -48,7 +41,10 @@ int main(int argc, char** argv)
     bscp::Client client(options);
 
     // set log handle, if not set, no logs will be output.
-    bscp::log::Log::SetLogHandler(LogHandle);
+    bscp::log::Log::SetLogHandler([](const bscp::log::LogLevel& level, const std::string& msg) {
+        std::cout << msg << std::endl;
+        return 0;
+    });
 
     // you must initialize before you use client.
     auto ret = client.Initialize();

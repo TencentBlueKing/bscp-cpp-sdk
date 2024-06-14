@@ -18,30 +18,13 @@
 
 #include "client.h"
 
-// define watch callback function.
-int handle(const bscp::Release& release)
-{
-    std::cout << "running callback function" << std::endl;
-
-    std::cout << release.m_releaseID << std::endl;
-
-    return 0;
-}
-
-// define log handle function.
-int LogHandle(const bscp::log::LogLevel& level, const std::string& msg)
-{
-    std::cout << msg << std::endl;
-    return 0;
-}
-
 int main(int argc, char** argv)
 {
-    if (argc < 11 || strcmp(argv[1], "-token") || strcmp(argv[3], "-addr") || strcmp(argv[5], "-bid") ||
-        strcmp(argv[7], "-side_rid") || strcmp(argv[9], "-app"))
+    if (argc < 11 || strcmp(argv[1], "-token") || strcmp(argv[3], "-addr") || strcmp(argv[5], "-bid") || strcmp(argv[7], "-side_rid") ||
+        strcmp(argv[9], "-app"))
     {
-        std::cout << "parameters error!\nusage: " << argv[0]
-                  << " -token {token} -addr {addr} -bid {bid} -side_rid {side_rid} -app {app}" << std::endl;
+        std::cout << "parameters error!\nusage: " << argv[0] << " -token {token} -addr {addr} -bid {bid} -side_rid {side_rid} -app {app}"
+                  << std::endl;
 
         return 0;
     }
@@ -58,7 +41,10 @@ int main(int argc, char** argv)
     bscp::Client client(options);
 
     // set log handle, if not set, no logs will be output.
-    bscp::log::Log::SetLogHandler(LogHandle);
+    bscp::log::Log::SetLogHandler([](const bscp::log::LogLevel& level, const std::string& msg) {
+        std::cout << msg << std::endl;
+        return 0;
+    });
 
     // you must initialize before you use client.
     auto ret = client.Initialize();
@@ -73,7 +59,27 @@ int main(int argc, char** argv)
 
     // add watch.
     // set handle function for the watch receive release data.
-    ret = client.AddWatcher(app, handle, appOptions);
+    ret = client.AddWatcher(
+        app,
+        [&app, &appOptions, &client](const bscp::Release& release) {
+            std::cout << "release ID: " << release.m_releaseID << std::endl;
+
+            for (auto kv : release.m_kvItems)
+            {
+                std::string value;
+
+                auto ret = client.Get(app, kv.m_key, appOptions, value);
+                if (ret)
+                {
+                    std::cout << "call get error, err-code(" << ret << ")" << std::endl;
+                    return ret;
+                }
+
+                std::cout << kv.m_key << "=" << value << std::endl;
+            }
+            return 0;
+        },
+        appOptions);
     if (ret)
     {
         std::cout << "failed to add watcher" << std::endl;
