@@ -4,6 +4,10 @@ TARGET := libbscp_sdk.a
 
 default: all
 
+ifndef GRPC_PATH
+GRPC_PATH = /usr/local/grpc-1.45.0
+endif
+
 BSCP_CPP_SDK_PATH = $(CURDIR)
 BUILD_DIR = $(BSCP_CPP_SDK_PATH)/build
 INCLUDE_BUILD_DIR = $(BUILD_DIR)/include
